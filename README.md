@@ -1,15 +1,11 @@
-# 🎓 PUEA Alumni Website
 
-A centralized platform for PUEA alumni to connect, network, and stay updated with institutional events, opportunities, and community activities.
+  # Alumni website development
 
----
+  This is a code bundle for Alumni website development. The original project is available at https://www.figma.com/design/Dhtcryl267ER6rMCc6OB2R/Alumni-website-development.
 
-## 📌 Overview
+  ## Running the code
 
-The PUEA Alumni Website is designed to strengthen the relationship between graduates and the institution by providing a digital space for:
+  Run `npm i` to install the dependencies.
 
-- Alumni networking
-- Event announcements and registration
-- Job and opportunity sharing
-- News and updates from the institution
-- Alumni directory and profiles
+  Run `npm run dev` to start the development server.
+  
