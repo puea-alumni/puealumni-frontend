@@ -14,6 +14,7 @@ import { NewsPage } from "./components/NewsPage";
 import { MarketPage } from "./components/MarketPage";
 import { AdminDashboard } from "./components/AdminDashboard";
 import { DonationsPage } from "./components/DonationsPage";
+import { ContactPage } from "./components/ContactPage";
 import { NotFound } from "./components/NotFound";
 
 export const router = createBrowserRouter([
@@ -25,15 +26,25 @@ export const router = createBrowserRouter([
       { path: "about", Component: AboutUsPage },
       { path: "login", Component: LoginPage },
       { path: "register", Component: RegisterPage },
+      // Alumni
       { path: "alumni", Component: AlumniListPage },
       { path: "alumni/:id", Component: AlumniProfilePage },
-      { path: "jobs", Component: JobPortalPage },
-      { path: "jobs/:id", Component: JobDetailPage },
-      { path: "events", Component: EventsPage },
       { path: "spotlight", Component: SpotlightPage },
+      // Jobs — standalone section
+      { path: "jobs", Component: JobPortalPage },
+      { path: "jobs/post", Component: JobPortalPage },
+      { path: "jobs/internships", Component: JobPortalPage },
+      { path: "jobs/:id", Component: JobDetailPage },
+      // Events & News
+      { path: "events", Component: EventsPage },
       { path: "news", Component: NewsPage },
+      // Marketplace
       { path: "market", Component: MarketPage },
+      // Donations
       { path: "donate", Component: DonationsPage },
+      // Contact
+      { path: "contact", Component: ContactPage },
+      // Admin
       { path: "admin", Component: AdminDashboard },
       { path: "*", Component: NotFound },
     ],

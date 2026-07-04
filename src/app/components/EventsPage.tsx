@@ -1,227 +1,170 @@
 import { useState } from "react";
-import { Calendar, MapPin, Users, Clock, DollarSign, CreditCard, CheckCircle } from "lucide-react";
+import { Calendar, MapPin, Users, Clock, CreditCard, CheckCircle, X, CalendarOff } from "lucide-react";
+import { useApi } from "../lib/hooks";
+import { endpoints } from "../lib/api";
+import { GridSkeleton } from "./ui/Skeleton";
+import { ErrorState } from "./ui/ErrorState";
+import { EmptyState } from "./ui/EmptyState";
 
-const mockEvents = [
-  {
-    id: 1,
-    title: "Annual Alumni Reunion 2026",
-    date: "June 15, 2026",
-    time: "6:00 PM - 11:00 PM",
-    location: "Grand Ballroom, University Campus",
-    attendees: 234,
-    price: 75,
-    description: "Join us for our biggest reunion event of the year with dinner, entertainment, and networking.",
-    image: "🎉",
-  },
-  {
-    id: 2,
-    title: "Tech Career Workshop",
-    date: "May 30, 2026",
-    time: "2:00 PM - 5:00 PM",
-    location: "Innovation Center, Building A",
-    attendees: 89,
-    price: 25,
-    description: "Learn about the latest trends in tech careers and network with industry leaders.",
-    image: "💼",
-  },
-  {
-    id: 3,
-    title: "Homecoming Weekend",
-    date: "October 10-12, 2026",
-    time: "All Weekend",
-    location: "University Campus",
-    attendees: 567,
-    price: 150,
-    description: "Three days of festivities, games, and celebrations. Includes meals and activities.",
-    image: "🏈",
-  },
-  {
-    id: 4,
-    title: "Networking Mixer",
-    date: "July 20, 2026",
-    time: "7:00 PM - 10:00 PM",
-    location: "Downtown Convention Center",
-    attendees: 156,
-    price: 35,
-    description: "Casual networking event with drinks and hors d'oeuvres.",
-    image: "🤝",
-  },
-];
+export interface Event {
+  id: number | string;
+  title: string;
+  date: string;
+  time: string;
+  location: string;
+  attendees: number;
+  price: number;
+  currency?: string;
+  description: string;
+  imageUrl?: string;
+  status?: "upcoming" | "past" | "cancelled";
+}
 
-export function EventsPage() {
-  const [selectedEvent, setSelectedEvent] = useState<number | null>(null);
-  const [showPayment, setShowPayment] = useState(false);
-  const [paymentComplete, setPaymentComplete] = useState(false);
+const SHADE_CYCLE = ["#03045e", "#0077b6", "#0096c7", "#00b4d8"];
 
-  const handleRegister = (eventId: number) => {
-    setSelectedEvent(eventId);
-    setShowPayment(true);
-  };
+function PaymentModal({ event, onClose }: { event: Event; onClose: () => void }) {
+  const [complete, setComplete] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const currency = event.currency ?? "KES";
 
-  const handlePayment = (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setPaymentComplete(true);
-    setTimeout(() => {
-      setShowPayment(false);
-      setPaymentComplete(false);
-      setSelectedEvent(null);
-    }, 3000);
+    setSubmitting(true);
+    // TODO: POST to endpoints.events.register(event.id) with form data
+    setTimeout(() => { setSubmitting(false); setComplete(true); }, 1500);
   };
-
-  const selectedEventData = mockEvents.find((e) => e.id === selectedEvent);
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12 px-4">
-      <div className="max-w-7xl mx-auto">
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">Upcoming Events</h1>
-          <p className="text-xl text-gray-600">Connect with fellow alumni at exclusive events</p>
-        </div>
-
-        <div className="grid lg:grid-cols-2 gap-6">
-          {mockEvents.map((event) => (
-            <div
-              key={event.id}
-              className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow"
-            >
-              <div className="bg-[#9333EA] text-white p-6 flex items-center justify-center text-6xl">
-                {event.image}
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+      <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden">
+        {!complete ? (
+          <>
+            <div className="flex items-center justify-between px-6 py-4" style={{ backgroundColor: "#03045e" }}>
+              <h2 className="text-lg font-bold text-white">Complete Registration</h2>
+              <button onClick={onClose} className="text-white/60 hover:text-white transition-colors"><X className="w-5 h-5" /></button>
+            </div>
+            <div className="p-6">
+              <div className="rounded-xl p-4 mb-5 border" style={{ backgroundColor: "#90e0ef", borderColor: "#ade8f4" }}>
+                <h3 className="font-bold text-sm mb-1" style={{ color: "#03045e" }}>{event.title}</h3>
+                <p className="text-xs text-gray-600 mb-2">{event.date} · {event.time}</p>
+                <p className="text-2xl font-bold" style={{ color: "#03045e" }}>{currency} {event.price.toLocaleString()}</p>
               </div>
-
-              <div className="p-6">
-                <h3 className="text-2xl font-bold text-gray-900 mb-4">{event.title}</h3>
-                <p className="text-gray-600 mb-4">{event.description}</p>
-
-                <div className="space-y-2 mb-6">
-                  <div className="flex items-center gap-2 text-gray-700">
-                    <Calendar className="w-5 h-5 text-[#9333EA]" />
-                    <span>{event.date}</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-gray-700">
-                    <Clock className="w-5 h-5 text-[#9333EA]" />
-                    <span>{event.time}</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-gray-700">
-                    <MapPin className="w-5 h-5 text-[#9333EA]" />
-                    <span>{event.location}</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-gray-700">
-                    <Users className="w-5 h-5 text-[#9333EA]" />
-                    <span>{event.attendees} attending</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-gray-700">
-                    <DollarSign className="w-5 h-5 text-[#9333EA]" />
-                    <span className="text-2xl font-bold text-[#9333EA]">${event.price}</span>
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium mb-1" style={{ color: "#03045e" }}>Full Name</label>
+                  <input name="fullName" type="text" required placeholder="John Doe" className="w-full px-4 py-2.5 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#0077b6]" style={{ borderColor: "#ade8f4" }} />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1" style={{ color: "#03045e" }}>Email</label>
+                  <input name="email" type="email" required placeholder="you@example.com" className="w-full px-4 py-2.5 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#0077b6]" style={{ borderColor: "#ade8f4" }} />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1" style={{ color: "#03045e" }}>Card Number</label>
+                  <div className="relative">
+                    <CreditCard className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                    <input name="cardNumber" type="text" required maxLength={19} placeholder="1234 5678 9012 3456" className="w-full pl-10 pr-4 py-2.5 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#0077b6]" style={{ borderColor: "#ade8f4" }} />
                   </div>
                 </div>
-
-                <button
-                  onClick={() => handleRegister(event.id)}
-                  className="w-full py-3 px-4 bg-[#9333EA] text-white rounded-lg hover:bg-[#7c2bbf] transition-colors font-semibold"
-                >
-                  Register Now
-                </button>
-              </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-1" style={{ color: "#03045e" }}>Expiry</label>
+                    <input name="expiry" type="text" required maxLength={5} placeholder="MM/YY" className="w-full px-4 py-2.5 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#0077b6]" style={{ borderColor: "#ade8f4" }} />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-1" style={{ color: "#03045e" }}>CVV</label>
+                    <input name="cvv" type="text" required maxLength={4} placeholder="123" className="w-full px-4 py-2.5 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#0077b6]" style={{ borderColor: "#ade8f4" }} />
+                  </div>
+                </div>
+                <div className="flex gap-3 pt-1">
+                  <button type="button" onClick={onClose} className="flex-1 py-3 rounded-xl border text-sm font-semibold" style={{ borderColor: "#ade8f4", color: "#03045e" }}>Cancel</button>
+                  <button type="submit" disabled={submitting} className="flex-1 py-3 rounded-xl text-sm font-semibold text-white disabled:opacity-60" style={{ backgroundColor: "#03045e" }}>
+                    {submitting ? "Processing…" : `Pay ${currency} ${event.price.toLocaleString()}`}
+                  </button>
+                </div>
+              </form>
             </div>
-          ))}
+          </>
+        ) : (
+          <div className="text-center py-12 px-6">
+            <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4" style={{ backgroundColor: "#90e0ef" }}>
+              <CheckCircle className="w-9 h-9" style={{ color: "#03045e" }} />
+            </div>
+            <h3 className="text-2xl font-bold mb-2" style={{ color: "#03045e" }}>Registration Complete!</h3>
+            <p className="text-gray-500 text-sm">Your ticket for <span className="font-semibold">{event.title}</span> has been confirmed. Check your email for details.</p>
+            <button onClick={onClose} className="mt-6 px-6 py-2.5 rounded-xl text-sm font-semibold text-white" style={{ backgroundColor: "#0077b6" }}>Done</button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+export function EventsPage() {
+  const [selectedId, setSelectedId] = useState<number | string | null>(null);
+  const { data, loading, error, retry } = useApi<Event[]>(endpoints.events.list());
+
+  const selectedEvent = (data ?? []).find((e) => e.id === selectedId);
+
+  return (
+    <div className="min-h-screen" style={{ backgroundColor: "#f0f4f8" }}>
+      <div className="py-12 px-4" style={{ backgroundColor: "#03045e" }}>
+        <div className="max-w-7xl mx-auto">
+          <h1 className="text-4xl font-bold text-white mb-2">Upcoming Events</h1>
+          <p className="text-lg" style={{ color: "#90e0ef" }}>Connect with fellow alumni at exclusive events</p>
         </div>
       </div>
 
-      {showPayment && selectedEventData && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-8">
-            {!paymentComplete ? (
-              <>
-                <h2 className="text-2xl font-bold text-gray-900 mb-4">Complete Registration</h2>
-                <div className="mb-6 p-4 bg-purple-50 rounded-lg">
-                  <h3 className="font-bold text-gray-900 mb-2">{selectedEventData.title}</h3>
-                  <p className="text-sm text-gray-600">{selectedEventData.date}</p>
-                  <p className="text-2xl font-bold text-[#9333EA] mt-2">${selectedEventData.price}</p>
+      <div className="max-w-7xl mx-auto px-4 py-10">
+        {loading && <GridSkeleton cols={2} rows={2} />}
+        {!loading && error && <ErrorState title="Could not load events" message={error} onRetry={retry} />}
+        {!loading && !error && (!data || data.length === 0) && (
+          <EmptyState icon={CalendarOff} title="No upcoming events" description="Events will appear here once they are published by the admin." />
+        )}
+
+        {!loading && !error && data && data.length > 0 && (
+          <div className="grid lg:grid-cols-2 gap-6">
+            {data.map((event, i) => {
+              const shade = SHADE_CYCLE[i % SHADE_CYCLE.length];
+              return (
+                <div key={event.id} className="bg-white rounded-xl border overflow-hidden hover:shadow-lg transition-all" style={{ borderColor: "#ade8f4" }}>
+                  <div className="flex items-center justify-between px-6 py-4" style={{ backgroundColor: shade }}>
+                    {event.imageUrl
+                      ? <img src={event.imageUrl} alt={event.title} className="h-12 w-12 rounded-lg object-cover" />
+                      : <Calendar className="w-8 h-8 text-white/80" />}
+                    <span className="text-xl font-bold text-white">{event.currency ?? "KES"} {event.price.toLocaleString()}</span>
+                  </div>
+                  <div className="p-6">
+                    <h3 className="text-xl font-bold mb-2" style={{ color: "#03045e" }}>{event.title}</h3>
+                    <p className="text-sm text-gray-500 mb-5 leading-relaxed">{event.description}</p>
+                    <div className="grid grid-cols-2 gap-3 mb-6">
+                      {[
+                        { Icon: Calendar, text: event.date },
+                        { Icon: Clock, text: event.time },
+                        { Icon: MapPin, text: event.location },
+                        { Icon: Users, text: `${event.attendees.toLocaleString()} attending` },
+                      ].map(({ Icon, text }) => (
+                        <div key={text} className="flex items-start gap-2 text-sm">
+                          <Icon className="w-4 h-4 mt-0.5 flex-shrink-0" style={{ color: "#0077b6" }} />
+                          <span className="text-gray-600 leading-tight">{text}</span>
+                        </div>
+                      ))}
+                    </div>
+                    <button
+                      onClick={() => setSelectedId(event.id)}
+                      className="w-full py-3 rounded-xl font-semibold text-white text-sm hover:opacity-90 transition-opacity"
+                      style={{ backgroundColor: "#0077b6" }}
+                    >
+                      Register Now — {event.currency ?? "KES"} {event.price.toLocaleString()}
+                    </button>
+                  </div>
                 </div>
-
-                <form onSubmit={handlePayment} className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Cardholder Name
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#9333EA] focus:border-transparent"
-                      placeholder="John Doe"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Card Number
-                    </label>
-                    <div className="relative">
-                      <CreditCard className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                      <input
-                        type="text"
-                        required
-                        maxLength={19}
-                        className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#9333EA] focus:border-transparent"
-                        placeholder="1234 5678 9012 3456"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Expiry Date
-                      </label>
-                      <input
-                        type="text"
-                        required
-                        maxLength={5}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#9333EA] focus:border-transparent"
-                        placeholder="MM/YY"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">CVV</label>
-                      <input
-                        type="text"
-                        required
-                        maxLength={3}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#9333EA] focus:border-transparent"
-                        placeholder="123"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="flex gap-3 mt-6">
-                    <button
-                      type="button"
-                      onClick={() => setShowPayment(false)}
-                      className="flex-1 py-3 px-4 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors font-semibold"
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      type="submit"
-                      className="flex-1 py-3 px-4 bg-[#9333EA] text-white rounded-lg hover:bg-[#7c2bbf] transition-colors font-semibold"
-                    >
-                      Pay ${selectedEventData.price}
-                    </button>
-                  </div>
-                </form>
-              </>
-            ) : (
-              <div className="text-center py-8">
-                <CheckCircle className="w-16 h-16 text-green-600 mx-auto mb-4" />
-                <h3 className="text-2xl font-bold text-gray-900 mb-2">Registration Complete!</h3>
-                <p className="text-gray-600">
-                  Your ticket for {selectedEventData.title} has been confirmed.
-                </p>
-              </div>
-            )}
+              );
+            })}
           </div>
-        </div>
-      )}
+        )}
+      </div>
+
+      {selectedEvent && <PaymentModal event={selectedEvent} onClose={() => setSelectedId(null)} />}
     </div>
   );
 }
