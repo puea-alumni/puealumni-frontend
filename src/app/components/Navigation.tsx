@@ -5,7 +5,7 @@ import {
   Users, Calendar, Briefcase, ShoppingBag,
   LayoutDashboard, Info, BookOpen, Trophy,
   Clock, FileText, PlusCircle, GraduationCap,
-  Star, Building2, Tag, Home, Phone,
+  Star, Building2, Tag, Home, Phone, Hammer,
 } from "lucide-react";
 import logo from "../../imports/Logo.jpeg";
 
@@ -43,6 +43,7 @@ const NAV: NavItem[] = [
       { path: "/events", label: "Upcoming Events", icon: Calendar, desc: "Register for upcoming gatherings" },
       { path: "/events", label: "Past Events", icon: Clock, desc: "Relive previous events" },
       { path: "/news", label: "Latest News", icon: FileText, desc: "Announcements & updates" },
+      { path: "/projects", label: "Projects", icon: Hammer, desc: "Alumni-driven community projects" },
     ],
   },
   {

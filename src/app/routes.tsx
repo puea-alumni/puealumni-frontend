@@ -15,6 +15,7 @@ import { MarketPage } from "./components/MarketPage";
 import { AdminDashboard } from "./components/AdminDashboard";
 import { DonationsPage } from "./components/DonationsPage";
 import { ContactPage } from "./components/ContactPage";
+import { ProjectsPage } from "./components/ProjectsPage";
 import { NotFound } from "./components/NotFound";
 
 export const router = createBrowserRouter([
@@ -44,6 +45,7 @@ export const router = createBrowserRouter([
       { path: "donate", Component: DonationsPage },
       // Contact
       { path: "contact", Component: ContactPage },
+      { path: "projects", Component: ProjectsPage },
       // Admin
       { path: "admin", Component: AdminDashboard },
       { path: "*", Component: NotFound },
