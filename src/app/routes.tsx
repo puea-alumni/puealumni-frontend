@@ -14,7 +14,9 @@ import { NewsPage } from "./components/NewsPage";
 import { MarketPage } from "./components/MarketPage";
 import { AdminDashboard } from "./components/AdminDashboard";
 import { DonationsPage } from "./components/DonationsPage";
+import { ProfilePage } from "./components/ProfilePage";
 import { NotFound } from "./components/NotFound";
+import { ProtectedRoute } from "./components/ProtectedRoute";
 
 export const router = createBrowserRouter([
   {
@@ -34,7 +36,22 @@ export const router = createBrowserRouter([
       { path: "news", Component: NewsPage },
       { path: "market", Component: MarketPage },
       { path: "donate", Component: DonationsPage },
-      { path: "admin", Component: AdminDashboard },
+      {
+        path: "admin",
+        element: (
+          <ProtectedRoute requiredRole="admin">
+            <AdminDashboard />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "profile",
+        element: (
+          <ProtectedRoute>
+            <ProfilePage />
+          </ProtectedRoute>
+        ),
+      },
       { path: "*", Component: NotFound },
     ],
   },
