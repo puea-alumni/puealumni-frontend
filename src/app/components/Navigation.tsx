@@ -1,18 +1,20 @@
 import { useState, useRef, useEffect } from "react";
-import { Link, useLocation } from "react-router";
+import { Link, useLocation, useNavigate } from "react-router";
 import {
   Menu, X, Heart, ChevronDown,
   Users, Calendar, Briefcase, ShoppingBag,
   LayoutDashboard, Info, BookOpen, Trophy,
   Clock, FileText, PlusCircle, GraduationCap,
   Star, Building2, Tag, Home, Phone, Hammer,
+  User as UserIcon, LogOut,
 } from "lucide-react";
 import logo from "../../imports/Logo.jpeg";
+import { useAuth } from "../../context/AuthContext";
 
 interface SubItem { path: string; label: string; icon: React.ElementType; desc: string }
 interface NavItem { path: string; label: string; icon: React.ElementType; items?: SubItem[] }
 
-const NAV: NavItem[] = [
+const BASE_NAV: NavItem[] = [
   { path: "/", label: "Home", icon: Home },
   {
     path: "/about",
@@ -67,8 +69,9 @@ const NAV: NavItem[] = [
     ],
   },
   { path: "/contact", label: "Contact", icon: Phone },
-  { path: "/admin", label: "Admin", icon: LayoutDashboard },
 ];
+
+const ADMIN_NAV_ITEM: NavItem = { path: "/admin", label: "Admin", icon: LayoutDashboard };
 
 function Dropdown({ items, onClose }: { items: SubItem[]; onClose: () => void }) {
   return (
@@ -100,12 +103,35 @@ export function Navigation() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [openMenu, setOpenMenu] = useState<string | null>(null);
   const [mobileExpanded, setMobileExpanded] = useState<string | null>(null);
+  const [profileOpen, setProfileOpen] = useState(false);
   const navRef = useRef<HTMLDivElement>(null);
+  const profileRef = useRef<HTMLDivElement>(null);
   const location = useLocation();
+  const navigate = useNavigate();
+  const { user, isAuthenticated, logout } = useAuth();
+
+  const NAV: NavItem[] =
+    isAuthenticated && user?.role === "admin"
+      ? [...BASE_NAV, ADMIN_NAV_ITEM]
+      : BASE_NAV;
+
+  const initials = user?.name
+    ?.split(" ")
+    .map((part) => part[0])
+    .slice(0, 2)
+    .join("")
+    .toUpperCase();
+
+  const handleLogout = async () => {
+    await logout();
+    setProfileOpen(false);
+    navigate("/");
+  };
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
       if (navRef.current && !navRef.current.contains(e.target as Node)) setOpenMenu(null);
+      if (profileRef.current && !profileRef.current.contains(e.target as Node)) setProfileOpen(false);
     };
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
@@ -115,6 +141,7 @@ export function Navigation() {
     setMobileOpen(false);
     setOpenMenu(null);
     setMobileExpanded(null);
+    setProfileOpen(false);
   }, [location.pathname]);
 
   const isActive = (item: NavItem) => {
@@ -179,20 +206,68 @@ export function Navigation() {
             >
               <Heart className="w-3.5 h-3.5" /> Donate
             </Link>
-            <Link
-              to="/login"
-              className="px-3 py-2 rounded-lg text-[13px] font-medium border"
-              style={{ color: "#03045e", borderColor: "#0077b6" }}
-            >
-              Login
-            </Link>
-            <Link
-              to="/login"
-              className="px-3 py-2 rounded-lg text-[13px] font-semibold text-white"
-              style={{ backgroundColor: "#03045e" }}
-            >
-              Register
-            </Link>
+
+            {isAuthenticated ? (
+              <div className="relative" ref={profileRef}>
+                <button
+                  onClick={() => setProfileOpen(!profileOpen)}
+                  className="flex items-center gap-1.5 pl-1 pr-2 py-1 rounded-lg transition-colors hover:bg-white/40"
+                >
+                  <div
+                    className="w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs text-white"
+                    style={{ backgroundColor: "#03045e" }}
+                  >
+                    {initials || <UserIcon className="w-4 h-4" />}
+                  </div>
+                  <ChevronDown
+                    className={`w-3.5 h-3.5 transition-transform ${profileOpen ? "rotate-180" : ""}`}
+                    style={{ color: "#03045e" }}
+                  />
+                </button>
+
+                {profileOpen && (
+                  <div className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-2xl border border-gray-100 py-2 z-50">
+                    <div className="px-4 py-2 border-b border-gray-100">
+                      <p className="text-sm font-semibold truncate" style={{ color: "#03045e" }}>
+                        {user?.name}
+                      </p>
+                      <p className="text-xs text-gray-500 truncate">{user?.email}</p>
+                    </div>
+                    <Link
+                      to="/profile"
+                      onClick={() => setProfileOpen(false)}
+                      className="flex items-center gap-2 px-4 py-2 text-sm hover:bg-[#ade8f4]/25"
+                      style={{ color: "#03045e" }}
+                    >
+                      <UserIcon className="w-4 h-4" /> Profile
+                    </Link>
+                    <button
+                      onClick={handleLogout}
+                      className="w-full flex items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50"
+                    >
+                      <LogOut className="w-4 h-4" /> Logout
+                    </button>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <>
+                <Link
+                  to="/login"
+                  className="px-3 py-2 rounded-lg text-[13px] font-medium border"
+                  style={{ color: "#03045e", borderColor: "#0077b6" }}
+                >
+                  Login
+                </Link>
+                <Link
+                  to="/login"
+                  className="px-3 py-2 rounded-lg text-[13px] font-semibold text-white"
+                  style={{ backgroundColor: "#03045e" }}
+                >
+                  Register
+                </Link>
+              </>
+            )}
           </div>
 
           {/* Mobile hamburger */}
@@ -273,8 +348,45 @@ export function Navigation() {
               >
                 <Heart className="w-4 h-4" /> Donate
               </Link>
-              <Link to="/login" onClick={() => setMobileOpen(false)} className="block px-3 py-2.5 rounded-lg text-sm font-medium" style={{ color: "#03045e" }}>Login</Link>
-              <Link to="/login" onClick={() => setMobileOpen(false)} className="block px-3 py-2.5 rounded-lg text-sm font-semibold text-white" style={{ backgroundColor: "#03045e" }}>Register</Link>
+
+              {isAuthenticated ? (
+                <>
+                  <div className="flex items-center gap-3 px-3 py-2">
+                    <div
+                      className="w-9 h-9 rounded-full flex items-center justify-center font-bold text-sm text-white"
+                      style={{ backgroundColor: "#03045e" }}
+                    >
+                      {initials || <UserIcon className="w-4 h-4" />}
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold" style={{ color: "#03045e" }}>{user?.name}</p>
+                      <p className="text-xs text-gray-600">{user?.email}</p>
+                    </div>
+                  </div>
+                  <Link
+                    to="/profile"
+                    onClick={() => setMobileOpen(false)}
+                    className="flex items-center gap-2 px-3 py-2.5 rounded-lg text-sm font-medium"
+                    style={{ color: "#03045e" }}
+                  >
+                    <UserIcon className="w-4 h-4" /> Profile
+                  </Link>
+                  <button
+                    onClick={() => {
+                      setMobileOpen(false);
+                      handleLogout();
+                    }}
+                    className="w-full flex items-center gap-2 px-3 py-2.5 rounded-lg text-sm font-medium text-red-600"
+                  >
+                    <LogOut className="w-4 h-4" /> Logout
+                  </button>
+                </>
+              ) : (
+                <>
+                  <Link to="/login" onClick={() => setMobileOpen(false)} className="block px-3 py-2.5 rounded-lg text-sm font-medium" style={{ color: "#03045e" }}>Login</Link>
+                  <Link to="/login" onClick={() => setMobileOpen(false)} className="block px-3 py-2.5 rounded-lg text-sm font-semibold text-white" style={{ backgroundColor: "#03045e" }}>Register</Link>
+                </>
+              )}
             </div>
           </div>
         </div>

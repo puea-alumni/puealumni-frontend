@@ -2,11 +2,14 @@ import { useState } from "react";
 import { useNavigate } from "react-router";
 import { Mail, Lock, User, Calendar } from "lucide-react";
 import logo from "../../imports/Logo.jpeg";
+import { useAuth } from "../../context/AuthContext";
+import * as authService from "../../services/authService";
 
 type Tab = "login" | "register";
 
 export function LoginPage() {
   const navigate = useNavigate();
+  const { login: setAuthSession } = useAuth();
   const [tab, setTab] = useState<Tab>("login");
 
   const [loginData, setLoginData] = useState({ email: "", password: "" });
@@ -19,14 +22,88 @@ export function LoginPage() {
     confirmPassword: "",
   });
 
-  const handleLogin = (e: React.FormEvent) => {
+  const [loginLoading, setLoginLoading] = useState(false);
+  const [loginError, setLoginError] = useState("");
+
+  const [registerLoading, setRegisterLoading] = useState(false);
+  const [registerError, setRegisterError] = useState("");
+
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    navigate("/");
+
+    try {
+      setLoginLoading(true);
+      setLoginError("");
+
+      const response = await authService.login(loginData.email, loginData.password);
+      const { user, token } = response.data;
+
+      setAuthSession(user, token);
+      navigate("/");
+    } catch (err: any) {
+      console.error(err);
+      setLoginError(
+        err.response?.data?.message || "Invalid email or password."
+      );
+    } finally {
+      setLoginLoading(false);
+    }
   };
 
-  const handleRegister = (e: React.FormEvent) => {
+  const validateRegister = (): string | null => {
+    if (registerData.password !== registerData.confirmPassword) {
+      return "Passwords do not match.";
+    }
+
+    // Mirrors backend rule: min 8, mixed case, at least one number
+    const passwordRules = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
+    if (!passwordRules.test(registerData.password)) {
+      return "Password must be at least 8 characters and include uppercase, lowercase, and a number.";
+    }
+
+    return null;
+  };
+
+  const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
-    navigate("/");
+
+    const validationError = validateRegister();
+    if (validationError) {
+      setRegisterError(validationError);
+      return;
+    }
+
+    try {
+      setRegisterLoading(true);
+      setRegisterError("");
+
+      const response = await authService.register({
+        name: `${registerData.firstName} ${registerData.lastName}`.trim(),
+        email: registerData.email,
+        password: registerData.password,
+        password_confirmation: registerData.confirmPassword,
+        graduation_year: Number(registerData.graduationYear),
+      });
+
+      const { user, token } = response.data;
+
+      setAuthSession(user, token);
+      navigate("/");
+    } catch (err: any) {
+      console.error(err);
+
+      const validationErrors = err.response?.data?.errors;
+      if (validationErrors) {
+        const firstError = Object.values(validationErrors)[0] as string[];
+        setRegisterError(firstError?.[0] || "Registration failed.");
+      } else {
+        setRegisterError(
+          err.response?.data?.message || "Something went wrong. Please try again."
+        );
+      }
+    } finally {
+      setRegisterLoading(false);
+    }
   };
 
   const inputClass =
@@ -108,15 +185,22 @@ export function LoginPage() {
                     <input type="checkbox" className="w-4 h-4 rounded border-gray-300" />
                     Remember me
                   </label>
-                  <a href="#" className="text-[#0077b6] hover:underline">Forgot password?</a>
+                  <a href="/forgot-password" className="text-[#0077b6] hover:underline">Forgot password?</a>
                 </div>
+
+                {loginError && (
+                  <div className="p-3 rounded-lg bg-red-50 border border-red-200 text-red-600 text-sm">
+                    {loginError}
+                  </div>
+                )}
 
                 <button
                   type="submit"
-                  className="w-full py-3 text-white rounded-lg font-semibold hover:opacity-90 transition-opacity"
-                  style={{ backgroundColor: "#ade8f4", color: "#03045e" }}
+                  disabled={loginLoading}
+                  className="w-full py-3 text-white rounded-lg font-semibold hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
+                  style={{ backgroundColor: "#0077b6" }}
                 >
-                  Sign In
+                  {loginLoading ? "Signing In..." : "Sign In"}
                 </button>
 
                 <p className="text-center text-sm text-gray-500">
@@ -185,7 +269,7 @@ export function LoginPage() {
                       type="number"
                       required
                       min="1950"
-                      max="2030"
+                      max={new Date().getFullYear()}
                       value={registerData.graduationYear}
                       onChange={(e) => setRegisterData({ ...registerData, graduationYear: e.target.value })}
                       className={inputClass}
@@ -225,6 +309,10 @@ export function LoginPage() {
                   </div>
                 </div>
 
+                <p className="text-xs text-gray-500 -mt-2">
+                  Must be at least 8 characters, with uppercase, lowercase, and a number.
+                </p>
+
                 <label className="flex items-start gap-2 text-sm text-gray-600 cursor-pointer">
                   <input type="checkbox" required className="w-4 h-4 mt-0.5 rounded border-gray-300" />
                   <span>
@@ -234,12 +322,19 @@ export function LoginPage() {
                   </span>
                 </label>
 
+                {registerError && (
+                  <div className="p-3 rounded-lg bg-red-50 border border-red-200 text-red-600 text-sm">
+                    {registerError}
+                  </div>
+                )}
+
                 <button
                   type="submit"
-                  className="w-full py-3 text-white rounded-lg font-semibold hover:opacity-90 transition-opacity"
+                  disabled={registerLoading}
+                  className="w-full py-3 text-white rounded-lg font-semibold hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
                   style={{ backgroundColor: "#0077b6" }}
                 >
-                  Create Account
+                  {registerLoading ? "Creating Account..." : "Create Account"}
                 </button>
 
                 <p className="text-center text-sm text-gray-500">

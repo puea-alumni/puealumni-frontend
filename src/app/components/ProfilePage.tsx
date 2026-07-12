@@ -11,6 +11,9 @@ import {
   X,
   Mail,
   GraduationCap,
+  Hash,
+  ShieldCheck,
+  ShieldAlert,
 } from "lucide-react";
 
 import api from "../../lib/api";
@@ -24,6 +27,17 @@ interface ProfileFormData {
   company: string;
   city: string;
   bio: string;
+}
+
+interface Activation {
+  status: string;
+  expires_at: string | null;
+  days_remaining: number;
+}
+
+interface AccountInfo {
+  alumni_number: string;
+  activation: Activation;
 }
 
 const emptyForm: ProfileFormData = {
@@ -44,6 +58,7 @@ export function ProfilePage() {
   const [mode, setMode] = useState<"view" | "edit">("view");
 
   const [formData, setFormData] = useState<ProfileFormData>(emptyForm);
+  const [accountInfo, setAccountInfo] = useState<AccountInfo | null>(null);
 
   const [pageLoading, setPageLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -65,6 +80,11 @@ export function ProfilePage() {
           company: profile.company || "",
           city: profile.city || "",
           bio: profile.bio || "",
+        });
+
+        setAccountInfo({
+          alumni_number: profile.alumni_number,
+          activation: profile.activation,
         });
       } catch (err: any) {
         console.error(err);
@@ -143,14 +163,14 @@ export function ProfilePage() {
 
   if (pageLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <p className="text-gray-500">Loading your profile...</p>
+      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: "#ade8f4" }}>
+        <p className="text-[#03045e]">Loading your profile...</p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 py-12 bg-gray-50">
+    <div className="min-h-screen flex items-center justify-center px-4 py-12" style={{ backgroundColor: "#ade8f4" }}>
       <div className="max-w-2xl w-full">
         
 
@@ -168,11 +188,11 @@ export function ProfilePage() {
 
         <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
           {/* Header / cover */}
-          <div className="h-24 bg-gradient-to-r from-[#9333EA] to-[#7c2bbf]" />
+          <div className="h-24 bg-gradient-to-r from-[#03045e] to-[#0077b6]" />
 
           <div className="px-8 pb-8">
             <div className="flex items-end justify-between -mt-12 mb-6">
-              <div className="w-24 h-24 rounded-full bg-purple-100 text-[#9333EA] flex items-center justify-center font-semibold text-3xl border-4 border-white shadow-sm">
+              <div className="w-24 h-24 rounded-full bg-[#03045e] text-white flex items-center justify-center font-semibold text-3xl border-4 border-white shadow-sm">
                 {initials || <User className="w-9 h-9" />}
               </div>
 
@@ -183,7 +203,7 @@ export function ProfilePage() {
                     setSuccess("");
                     setMode("edit");
                   }}
-                  className="mt-14 inline-flex items-center gap-2 py-2 px-4 bg-[#9333EA] text-white rounded-lg hover:bg-[#7c2bbf] transition-colors font-semibold text-sm"
+                  className="mt-14 inline-flex items-center gap-2 py-2 px-4 bg-[#0077b6] text-white rounded-lg hover:bg-[#03045e] transition-colors font-semibold text-sm"
                 >
                   <Pencil className="w-4 h-4" />
                   Edit Profile
@@ -201,7 +221,7 @@ export function ProfilePage() {
             </div>
 
             {mode === "view" ? (
-              <ProfileView formData={formData} email={user?.email} />
+              <ProfileView formData={formData} email={user?.email} accountInfo={accountInfo} />
             ) : (
               <ProfileEditForm
                 formData={formData}
@@ -222,9 +242,11 @@ export function ProfilePage() {
 function ProfileView({
   formData,
   email,
+  accountInfo,
 }: {
   formData: ProfileFormData;
   email?: string;
+  accountInfo: AccountInfo | null;
 }) {
   const details = [
     {
@@ -259,11 +281,40 @@ function ProfileView({
     },
   ];
 
+  const isActive = accountInfo?.activation?.status === "active";
+
   return (
     <div>
-      <h2 className="text-2xl font-bold text-gray-900">
-        {formData.name || "Unnamed Alumnus"}
-      </h2>
+      <div className="flex flex-wrap items-center gap-3">
+        <h2 className="text-2xl font-bold text-gray-900">
+          {formData.name || "Unnamed Alumnus"}
+        </h2>
+
+        {accountInfo?.alumni_number && (
+          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-[#ade8f4]/50 text-[#03045e]">
+            <Hash className="w-3 h-3" />
+            {accountInfo.alumni_number}
+          </span>
+        )}
+
+        {accountInfo?.activation && (
+          <span
+            className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold capitalize ${
+              isActive
+                ? "bg-green-100 text-green-700"
+                : "bg-red-100 text-red-600"
+            }`}
+          >
+            {isActive ? (
+              <ShieldCheck className="w-3 h-3" />
+            ) : (
+              <ShieldAlert className="w-3 h-3" />
+            )}
+            {accountInfo.activation.status}
+          </span>
+        )}
+      </div>
+
       {formData.job_title && (
         <p className="text-gray-500 mt-0.5">
           {formData.job_title}
@@ -271,10 +322,28 @@ function ProfileView({
         </p>
       )}
 
+      {isActive && accountInfo?.activation.expires_at && (
+        <p className="text-xs text-gray-400 mt-1">
+          Membership active until{" "}
+          {new Date(accountInfo.activation.expires_at).toLocaleDateString("en-KE", {
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+          })}{" "}
+          ({accountInfo.activation.days_remaining} days remaining)
+        </p>
+      )}
+
+      {!isActive && (
+        <p className="text-xs text-gray-400 mt-1">
+          Your membership is currently inactive. Activate your membership to unlock all platform features and enjoy the full alumni experience.
+        </p>
+      )}
+
       <div className="grid sm:grid-cols-2 gap-x-6 gap-y-4 mt-6 pt-6 border-t border-gray-100">
         {details.map(({ icon: Icon, label, value }) => (
           <div key={label} className="flex items-start gap-3">
-            <div className="w-9 h-9 rounded-lg bg-purple-50 text-[#9333EA] flex items-center justify-center shrink-0">
+            <div className="w-9 h-9 rounded-lg bg-[#ade8f4]/40 text-[#0077b6] flex items-center justify-center shrink-0">
               <Icon className="w-4 h-4" />
             </div>
             <div className="min-w-0">
@@ -289,7 +358,7 @@ function ProfileView({
 
       <div className="mt-6 pt-6 border-t border-gray-100">
         <div className="flex items-center gap-2 mb-2">
-          <FileText className="w-4 h-4 text-[#9333EA]" />
+          <FileText className="w-4 h-4 text-[#0077b6]" />
           <p className="text-xs text-gray-400 uppercase tracking-wide">Bio</p>
         </div>
         <p className={`text-sm leading-relaxed ${formData.bio ? "text-gray-700" : "text-gray-400 italic"}`}>
@@ -330,7 +399,7 @@ function ProfileEditForm({
               required
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#9333EA] focus:border-transparent"
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#0077b6] focus:border-transparent"
               placeholder="Jane Doe"
             />
           </div>
@@ -350,7 +419,7 @@ function ProfileEditForm({
               max={new Date().getFullYear()}
               value={formData.graduation_year}
               onChange={(e) => setFormData({ ...formData, graduation_year: e.target.value })}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#9333EA] focus:border-transparent"
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#0077b6] focus:border-transparent"
               placeholder="2020"
             />
           </div>
@@ -368,7 +437,7 @@ function ProfileEditForm({
             type="text"
             value={formData.degree}
             onChange={(e) => setFormData({ ...formData, degree: e.target.value })}
-            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#9333EA] focus:border-transparent"
+            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#0077b6] focus:border-transparent"
             placeholder="Computer Science"
           />
         </div>
@@ -386,7 +455,7 @@ function ProfileEditForm({
               type="text"
               value={formData.job_title}
               onChange={(e) => setFormData({ ...formData, job_title: e.target.value })}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#9333EA] focus:border-transparent"
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#0077b6] focus:border-transparent"
               placeholder="Senior Software Engineer"
             />
           </div>
@@ -403,7 +472,7 @@ function ProfileEditForm({
               type="text"
               value={formData.company}
               onChange={(e) => setFormData({ ...formData, company: e.target.value })}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#9333EA] focus:border-transparent"
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#0077b6] focus:border-transparent"
               placeholder="Safaricom"
             />
           </div>
@@ -421,7 +490,7 @@ function ProfileEditForm({
             type="text"
             value={formData.city}
             onChange={(e) => setFormData({ ...formData, city: e.target.value })}
-            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#9333EA] focus:border-transparent"
+            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#0077b6] focus:border-transparent"
             placeholder="Nairobi"
           />
         </div>
@@ -437,7 +506,7 @@ function ProfileEditForm({
           maxLength={1000}
           value={formData.bio}
           onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
-          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#9333EA] focus:border-transparent resize-none"
+          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#0077b6] focus:border-transparent resize-none"
           placeholder="Passionate about building scalable systems."
         />
         <p className="text-xs text-gray-400 mt-1 text-right">{formData.bio.length}/1000</p>
@@ -460,7 +529,7 @@ function ProfileEditForm({
         <button
           type="submit"
           disabled={saving}
-          className="flex-1 py-3 px-4 bg-[#9333EA] text-white rounded-lg hover:bg-[#7c2bbf] transition-colors font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+          className="flex-1 py-3 px-4 bg-[#0077b6] text-white rounded-lg hover:bg-[#03045e] transition-colors font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {saving ? "Saving..." : "Save Changes"}
         </button>
