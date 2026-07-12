@@ -14,16 +14,17 @@ function SuccessModal({ amount, onClose }: { amount: number; onClose: () => void
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 px-4">
       <div className="bg-white rounded-2xl p-8 max-w-md w-full text-center shadow-2xl">
-        <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4">
-          <CheckCircle className="w-9 h-9 text-emerald-500" />
+        <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4" style={{ backgroundColor: "#90e0ef" }}>
+          <CheckCircle className="w-9 h-9" style={{ color: "#03045e" }} />
         </div>
-        <h2 className="text-2xl font-bold text-gray-900 mb-2">Thank You!</h2>
+        <h2 className="text-2xl font-bold mb-2" style={{ color: "#03045e" }}>Thank You!</h2>
         <p className="text-gray-600 mb-1">Your donation of</p>
-        <p className="text-3xl font-bold text-purple-600 mb-4">{formatKES(amount)}</p>
+        <p className="text-3xl font-bold mb-4" style={{ color: "#03045e" }}>{formatKES(amount)}</p>
         <p className="text-gray-600 mb-6">has been received. A confirmation will be sent to your phone/email.</p>
         <button
           onClick={onClose}
-          className="w-full py-3 bg-purple-600 text-white rounded-xl font-semibold hover:bg-purple-700 transition-colors"
+          className="w-full py-3 text-white rounded-xl font-semibold hover:opacity-90 transition-opacity"
+          style={{ backgroundColor: "#03045e" }}
         >
           Done
         </button>
@@ -49,15 +50,8 @@ export function DonationsPage() {
 
   const finalAmount = customAmount ? parseInt(customAmount) || 0 : amount;
 
-  function handleAmountSelect(val: number) {
-    setAmount(val);
-    setCustomAmount("");
-  }
-
-  function handleCustomChange(e: React.ChangeEvent<HTMLInputElement>) {
-    setCustomAmount(e.target.value.replace(/\D/g, ""));
-    setAmount(0);
-  }
+  function handleAmountSelect(val: number) { setAmount(val); setCustomAmount(""); }
+  function handleCustomChange(e: React.ChangeEvent<HTMLInputElement>) { setCustomAmount(e.target.value.replace(/\D/g, "")); setAmount(0); }
 
   function validate() {
     if (finalAmount < 100) return "Minimum donation amount is KES 100.";
@@ -78,10 +72,7 @@ export function DonationsPage() {
     if (err) { setError(err); return; }
     setError("");
     setIsLoading(true);
-    setTimeout(() => {
-      setIsLoading(false);
-      setShowSuccess(true);
-    }, 2000);
+    setTimeout(() => { setIsLoading(false); setShowSuccess(true); }, 2000);
   }
 
   function formatCardNumber(val: string) {
@@ -95,45 +86,39 @@ export function DonationsPage() {
   }
 
   function resetForm() {
-    setShowSuccess(false);
-    setMpesaPhone("");
-    setCardNumber("");
-    setCardExpiry("");
-    setCardCVV("");
-    setCardName("");
-    setBankRef("");
-    setCustomAmount("");
-    setAmount(1000);
+    setShowSuccess(false); setMpesaPhone(""); setCardNumber(""); setCardExpiry("");
+    setCardCVV(""); setCardName(""); setBankRef(""); setCustomAmount(""); setAmount(1000);
   }
 
+  const inputClass = "w-full border rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#0077b6] border-gray-200";
+
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-start py-16 px-4">
+    <div className="min-h-screen flex flex-col items-center justify-start py-16 px-4" style={{ backgroundColor: "#90e0ef" }}>
       {/* Hero */}
       <div className="text-center mb-10 max-w-xl">
-        <div className="inline-flex items-center justify-center w-14 h-14 bg-purple-600 rounded-full mb-4">
+        <div className="inline-flex items-center justify-center w-14 h-14 rounded-full mb-4" style={{ backgroundColor: "#03045e" }}>
           <Heart className="w-7 h-7 text-white" />
         </div>
-        <h1 className="text-4xl font-bold text-gray-900 mb-3">Donate to Make a Difference</h1>
-        <p className="text-gray-500 text-lg">
+        <h1 className="text-4xl font-bold mb-3" style={{ color: "#03045e" }}>Donate to Make a Difference</h1>
+        <p className="text-lg" style={{ color: "#0077b6" }}>
           Your generosity supports the PUEA community. Every contribution, big or small, creates lasting impact.
         </p>
       </div>
 
       {/* Form card */}
-      <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-8 w-full max-w-lg">
+      <div className="bg-white rounded-2xl shadow-sm p-8 w-full max-w-lg border" style={{ borderColor: "#0077b6" }}>
         <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Donation frequency */}
+          {/* Frequency toggle */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Donation Frequency</label>
-            <div className="grid grid-cols-2 gap-2 bg-gray-100 p-1 rounded-lg">
+            <label className="block text-sm font-medium mb-2" style={{ color: "#03045e" }}>Donation Frequency</label>
+            <div className="grid grid-cols-2 gap-2 p-1 rounded-lg" style={{ backgroundColor: "#90e0ef" }}>
               {(["once", "monthly"] as DonationType[]).map((t) => (
                 <button
                   key={t}
                   type="button"
                   onClick={() => setDonationType(t)}
-                  className={`py-2 rounded-md text-sm font-medium transition-all ${
-                    donationType === t ? "bg-white text-purple-600 shadow-sm" : "text-gray-500"
-                  }`}
+                  className="py-2 rounded-md text-sm font-medium transition-all"
+                  style={donationType === t ? { backgroundColor: "#03045e", color: "#fff" } : { color: "#03045e", backgroundColor: "transparent" }}
                 >
                   {t === "once" ? "One-time" : "Monthly"}
                 </button>
@@ -141,20 +126,21 @@ export function DonationsPage() {
             </div>
           </div>
 
-          {/* Amount selection */}
+          {/* Amount */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Select Amount (KES)</label>
+            <label className="block text-sm font-medium mb-2" style={{ color: "#03045e" }}>Select Amount (KES)</label>
             <div className="grid grid-cols-3 gap-2 mb-3">
               {presetAmounts.map((val) => (
                 <button
                   key={val}
                   type="button"
                   onClick={() => handleAmountSelect(val)}
-                  className={`py-2 px-3 rounded-lg border text-sm font-semibold transition-all ${
+                  className="py-2 px-3 rounded-lg border text-sm font-semibold transition-all"
+                  style={
                     amount === val && !customAmount
-                      ? "border-purple-600 bg-purple-600 text-white"
-                      : "border-gray-200 text-gray-700 hover:border-purple-400"
-                  }`}
+                      ? { backgroundColor: "#03045e", color: "#fff", borderColor: "#03045e" }
+                      : { borderColor: "#ade8f4", color: "#03045e", backgroundColor: "#fff" }
+                  }
                 >
                   {formatKES(val)}
                 </button>
@@ -165,20 +151,20 @@ export function DonationsPage() {
               placeholder="Enter custom amount"
               value={customAmount}
               onChange={handleCustomChange}
-              className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+              className={inputClass}
             />
           </div>
 
-          {/* Summary pill */}
+          {/* Summary */}
           {finalAmount >= 100 && (
-            <div className="bg-purple-50 border border-purple-200 rounded-lg px-4 py-3 text-sm text-purple-700 font-medium text-center">
+            <div className="rounded-lg px-4 py-3 text-sm font-medium text-center border" style={{ backgroundColor: "#90e0ef", borderColor: "#0077b6", color: "#03045e" }}>
               Donating {formatKES(finalAmount)}{donationType === "monthly" ? " every month" : ""}
             </div>
           )}
 
           {/* Payment method */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Payment Method</label>
+            <label className="block text-sm font-medium mb-2" style={{ color: "#03045e" }}>Payment Method</label>
             <div className="grid grid-cols-3 gap-2">
               {([
                 { id: "mpesa", label: "M-Pesa", icon: <Smartphone className="w-4 h-4" /> },
@@ -189,11 +175,12 @@ export function DonationsPage() {
                   key={m.id}
                   type="button"
                   onClick={() => setPaymentMethod(m.id)}
-                  className={`flex items-center justify-center gap-2 py-2 rounded-lg border text-sm font-medium transition-all ${
+                  className="flex items-center justify-center gap-2 py-2 rounded-lg border text-sm font-medium transition-all"
+                  style={
                     paymentMethod === m.id
-                      ? "border-purple-600 bg-purple-50 text-purple-700"
-                      : "border-gray-200 text-gray-600 hover:border-purple-300"
-                  }`}
+                      ? { borderColor: "#03045e", backgroundColor: "#90e0ef", color: "#03045e" }
+                      : { borderColor: "#ade8f4", color: "#0077b6", backgroundColor: "#fff" }
+                  }
                 >
                   {m.icon} {m.label}
                 </button>
@@ -204,18 +191,12 @@ export function DonationsPage() {
           {/* M-Pesa */}
           {paymentMethod === "mpesa" && (
             <div className="space-y-3">
-              <div className="bg-green-50 border border-green-200 rounded-lg p-3 text-sm text-green-800">
+              <div className="rounded-lg p-3 text-sm border" style={{ backgroundColor: "#90e0ef", borderColor: "#0077b6", color: "#03045e" }}>
                 You will receive an STK push on your phone to confirm the payment.
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">M-Pesa Phone Number</label>
-                <input
-                  type="tel"
-                  placeholder="e.g. 0712 345 678"
-                  value={mpesaPhone}
-                  onChange={(e) => setMpesaPhone(e.target.value)}
-                  className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
-                />
+                <label className="block text-sm font-medium mb-1" style={{ color: "#03045e" }}>M-Pesa Phone Number</label>
+                <input type="tel" placeholder="e.g. 0712 345 678" value={mpesaPhone} onChange={(e) => setMpesaPhone(e.target.value)} className={inputClass} />
               </div>
             </div>
           )}
@@ -224,46 +205,21 @@ export function DonationsPage() {
           {paymentMethod === "card" && (
             <div className="space-y-3">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Cardholder Name</label>
-                <input
-                  type="text"
-                  placeholder="Name on card"
-                  value={cardName}
-                  onChange={(e) => setCardName(e.target.value)}
-                  className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
-                />
+                <label className="block text-sm font-medium mb-1" style={{ color: "#03045e" }}>Cardholder Name</label>
+                <input type="text" placeholder="Name on card" value={cardName} onChange={(e) => setCardName(e.target.value)} className={inputClass} />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Card Number</label>
-                <input
-                  type="text"
-                  placeholder="0000 0000 0000 0000"
-                  value={cardNumber}
-                  onChange={(e) => setCardNumber(formatCardNumber(e.target.value))}
-                  className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
-                />
+                <label className="block text-sm font-medium mb-1" style={{ color: "#03045e" }}>Card Number</label>
+                <input type="text" placeholder="0000 0000 0000 0000" value={cardNumber} onChange={(e) => setCardNumber(formatCardNumber(e.target.value))} className={inputClass} />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Expiry</label>
-                  <input
-                    type="text"
-                    placeholder="MM/YY"
-                    value={cardExpiry}
-                    onChange={(e) => setCardExpiry(formatExpiry(e.target.value))}
-                    className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
-                  />
+                  <label className="block text-sm font-medium mb-1" style={{ color: "#03045e" }}>Expiry</label>
+                  <input type="text" placeholder="MM/YY" value={cardExpiry} onChange={(e) => setCardExpiry(formatExpiry(e.target.value))} className={inputClass} />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">CVV</label>
-                  <input
-                    type="text"
-                    placeholder="123"
-                    maxLength={4}
-                    value={cardCVV}
-                    onChange={(e) => setCardCVV(e.target.value.replace(/\D/g, ""))}
-                    className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
-                  />
+                  <label className="block text-sm font-medium mb-1" style={{ color: "#03045e" }}>CVV</label>
+                  <input type="text" placeholder="123" maxLength={4} value={cardCVV} onChange={(e) => setCardCVV(e.target.value.replace(/\D/g, ""))} className={inputClass} />
                 </div>
               </div>
             </div>
@@ -272,26 +228,20 @@ export function DonationsPage() {
           {/* Bank */}
           {paymentMethod === "bank" && (
             <div className="space-y-3">
-              <div className="bg-sky-50 border border-sky-200 rounded-lg p-4 text-sm text-sky-800 space-y-2">
+              <div className="rounded-lg p-4 text-sm space-y-2 border" style={{ backgroundColor: "#90e0ef", borderColor: "#0077b6", color: "#03045e" }}>
                 <p className="font-semibold">Bank Transfer Details</p>
                 <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
-                  <span className="text-sky-600">Bank:</span><span className="font-medium">Equity Bank Kenya</span>
-                  <span className="text-sky-600">Account Name:</span><span className="font-medium">PUEA Alumni Association</span>
-                  <span className="text-sky-600">Account No.:</span><span className="font-medium">0140291234567</span>
-                  <span className="text-sky-600">Branch:</span><span className="font-medium">Kikuyu Branch</span>
-                  <span className="text-sky-600">Swift Code:</span><span className="font-medium">EQBLKENA</span>
+                  <span style={{ color: "#0077b6" }}>Bank:</span><span className="font-medium">Equity Bank Kenya</span>
+                  <span style={{ color: "#0077b6" }}>Account Name:</span><span className="font-medium">PUEA Alumni Association</span>
+                  <span style={{ color: "#0077b6" }}>Account No.:</span><span className="font-medium">0140291234567</span>
+                  <span style={{ color: "#0077b6" }}>Branch:</span><span className="font-medium">Kikuyu Branch</span>
+                  <span style={{ color: "#0077b6" }}>Swift Code:</span><span className="font-medium">EQBLKENA</span>
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Your Transaction Reference</label>
-                <input
-                  type="text"
-                  placeholder="e.g. EFT202406-JOHN"
-                  value={bankRef}
-                  onChange={(e) => setBankRef(e.target.value)}
-                  className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
-                />
-                <p className="text-xs text-gray-500 mt-1">Enter the reference you used so we can match your transfer.</p>
+                <label className="block text-sm font-medium mb-1" style={{ color: "#03045e" }}>Your Transaction Reference</label>
+                <input type="text" placeholder="e.g. EFT202406-JOHN" value={bankRef} onChange={(e) => setBankRef(e.target.value)} className={inputClass} />
+                <p className="text-xs mt-1" style={{ color: "#0077b6" }}>Enter the reference you used so we can match your transfer.</p>
               </div>
             </div>
           )}
@@ -305,7 +255,8 @@ export function DonationsPage() {
           <button
             type="submit"
             disabled={isLoading || finalAmount < 100}
-            className="w-full py-3.5 bg-purple-600 text-white rounded-xl font-semibold hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
+            className="w-full py-3.5 text-white rounded-xl font-semibold disabled:opacity-50 disabled:cursor-not-allowed transition-opacity hover:opacity-90 flex items-center justify-center gap-2"
+            style={{ backgroundColor: "#03045e" }}
           >
             {isLoading ? (
               <>
@@ -323,7 +274,7 @@ export function DonationsPage() {
             )}
           </button>
 
-          <p className="text-center text-xs text-gray-400">
+          <p className="text-center text-xs" style={{ color: "#0077b6" }}>
             Your donation is secure and encrypted. PUEA Alumni Association is a registered non-profit.
           </p>
         </form>

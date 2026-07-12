@@ -1,154 +1,186 @@
-import { Users, Briefcase, Calendar, TrendingUp, UserPlus, Activity, DollarSign, Eye } from "lucide-react";
+import { Users, Briefcase, Calendar, TrendingUp, DollarSign, RefreshCw } from "lucide-react";
+import { useApi } from "../lib/hooks";
+import { endpoints } from "../lib/api";
+import { StatsSkeleton, ListSkeleton, Skeleton } from "./ui/Skeleton";
+import { ErrorState } from "./ui/ErrorState";
+
+export interface AdminStats {
+  totalAlumni: number;
+  activeJobs: number;
+  upcomingEvents: number;
+  totalDonations: number;
+  alumniGrowth?: string;
+  jobsGrowth?: string;
+  eventsChange?: string;
+  donationsGrowth?: string;
+}
+
+export interface RecentAlumnus {
+  id: number | string;
+  name: string;
+  email: string;
+  graduationYear: number;
+  joinedDaysAgo: number;
+}
+
+export interface RecentJob {
+  id: number | string;
+  title: string;
+  company: string;
+  applicants: number;
+  status: "Active" | "Pending" | "Closed" | string;
+}
+
+export interface AdminEvent {
+  id: number | string;
+  name: string;
+  date: string;
+  attendees: number;
+  revenue: string;
+}
+
+function StatCard({ label, value, change, icon: Icon, shade }: { label: string; value: string; change?: string; icon: React.ElementType; shade: string }) {
+  return (
+    <div className="bg-white rounded-xl border border-gray-100 p-6">
+      <div className="flex items-center justify-between mb-4">
+        <div className="w-12 h-12 rounded-lg flex items-center justify-center" style={{ backgroundColor: shade + "22" }}>
+          <Icon className="w-6 h-6" style={{ color: shade }} />
+        </div>
+        {change && <span className="text-xs font-semibold px-2 py-1 rounded-full" style={{ backgroundColor: "#dcfce7", color: "#16a34a" }}>{change}</span>}
+      </div>
+      <p className="text-sm text-gray-500 mb-1">{label}</p>
+      <p className="text-3xl font-bold" style={{ color: "#03045e" }}>{value}</p>
+    </div>
+  );
+}
 
 export function AdminDashboard() {
-  const stats = [
-    { label: "Total Alumni", value: "50,234", change: "+12.5%", icon: Users, color: "blue" },
-    { label: "Active Jobs", value: "1,247", change: "+8.2%", icon: Briefcase, color: "green" },
-    { label: "Upcoming Events", value: "23", change: "+4", icon: Calendar, color: "purple" },
-    { label: "Total Revenue", value: "$124,500", change: "+15.3%", icon: DollarSign, color: "yellow" },
-  ];
+  const stats = useApi<AdminStats>(endpoints.admin.stats());
+  const alumni = useApi<RecentAlumnus[]>(endpoints.admin.recentAlumni());
+  const jobs = useApi<RecentJob[]>(endpoints.admin.recentJobs());
+  const events = useApi<AdminEvent[]>(endpoints.admin.events());
 
-  const recentAlumni = [
-    { name: "Alice Thompson", email: "alice@example.com", graduationYear: 2024, joinedDays: 1 },
-    { name: "Bob Martinez", email: "bob@example.com", graduationYear: 2023, joinedDays: 2 },
-    { name: "Carol Lee", email: "carol@example.com", graduationYear: 2024, joinedDays: 3 },
-    { name: "David Park", email: "david@example.com", graduationYear: 2022, joinedDays: 5 },
-  ];
-
-  const recentJobs = [
-    { title: "Software Engineer", company: "Google", applicants: 45, status: "Active" },
-    { title: "Product Manager", company: "Meta", applicants: 32, status: "Active" },
-    { title: "Data Scientist", company: "Amazon", applicants: 28, status: "Active" },
-    { title: "UX Designer", company: "Apple", applicants: 19, status: "Pending" },
-  ];
-
-  const upcomingEvents = [
-    { name: "Annual Alumni Reunion 2026", date: "June 15, 2026", attendees: 234, revenue: "$17,550" },
-    { name: "Tech Career Workshop", date: "May 30, 2026", attendees: 89, revenue: "$2,225" },
-    { name: "Networking Mixer", date: "July 20, 2026", attendees: 156, revenue: "$5,460" },
-  ];
+  const s = stats.data;
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8 px-4">
-      <div className="max-w-7xl mx-auto">
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold text-gray-900 mb-2">Admin Dashboard</h1>
-          <p className="text-gray-600">Overview of your alumni network platform</p>
+    <div className="min-h-screen" style={{ backgroundColor: "#f0f4f8" }}>
+      <div className="py-10 px-4" style={{ backgroundColor: "#03045e" }}>
+        <div className="max-w-7xl mx-auto">
+          <h1 className="text-3xl font-bold text-white mb-1">Admin Dashboard</h1>
+          <p style={{ color: "#90e0ef" }} className="text-sm">Overview of your alumni network platform</p>
         </div>
+      </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          {stats.map((stat) => {
-            const Icon = stat.icon;
-            const colorClasses = {
-              blue: "bg-purple-50 text-[#9333EA]",
-              green: "bg-green-100 text-green-600",
-              purple: "bg-purple-100 text-purple-600",
-              yellow: "bg-yellow-100 text-yellow-600",
-            }[stat.color];
+      <div className="max-w-7xl mx-auto px-4 py-8 space-y-8">
+        {/* Stats */}
+        {stats.loading && <StatsSkeleton />}
+        {stats.error && <ErrorState title="Could not load stats" message={stats.error} onRetry={stats.retry} />}
+        {s && (
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            <StatCard label="Total Alumni" value={s.totalAlumni.toLocaleString()} change={s.alumniGrowth} icon={Users} shade="#0077b6" />
+            <StatCard label="Active Jobs" value={s.activeJobs.toLocaleString()} change={s.jobsGrowth} icon={Briefcase} shade="#0096c7" />
+            <StatCard label="Upcoming Events" value={s.upcomingEvents.toLocaleString()} change={s.eventsChange} icon={Calendar} shade="#03045e" />
+            <StatCard label="Total Donations" value={`KES ${s.totalDonations.toLocaleString()}`} change={s.donationsGrowth} icon={DollarSign} shade="#00b4d8" />
+          </div>
+        )}
 
-            return (
-              <div key={stat.label} className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${colorClasses}`}>
-                    <Icon className="w-6 h-6" />
+        <div className="grid lg:grid-cols-2 gap-6">
+          {/* Recent Alumni */}
+          <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-50">
+              <h2 className="font-bold" style={{ color: "#03045e" }}>Recent Registrations</h2>
+              {alumni.error && <button onClick={alumni.retry} className="text-xs text-gray-400 flex items-center gap-1"><RefreshCw className="w-3 h-3" />Retry</button>}
+            </div>
+            {alumni.loading && <div className="p-4"><ListSkeleton rows={4} /></div>}
+            {alumni.error && !alumni.loading && <ErrorState title="Could not load alumni" message={alumni.error} onRetry={alumni.retry} />}
+            {!alumni.loading && alumni.data && alumni.data.length === 0 && (
+              <div className="px-6 py-8 text-center text-sm text-gray-400">No recent registrations.</div>
+            )}
+            {!alumni.loading && alumni.data && alumni.data.length > 0 && (
+              <div className="divide-y divide-gray-50">
+                {alumni.data.map((a) => (
+                  <div key={a.id} className="flex items-center gap-4 px-6 py-4">
+                    <div className="w-10 h-10 rounded-full flex items-center justify-center text-white text-sm font-bold flex-shrink-0" style={{ backgroundColor: "#0077b6" }}>
+                      {a.name.split(" ").map((n) => n[0]).join("").slice(0, 2).toUpperCase()}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold text-sm truncate" style={{ color: "#03045e" }}>{a.name}</p>
+                      <p className="text-xs text-gray-400 truncate">{a.email}</p>
+                    </div>
+                    <div className="text-right flex-shrink-0">
+                      <p className="text-xs text-gray-400">Class of {a.graduationYear}</p>
+                      <p className="text-xs" style={{ color: "#0077b6" }}>{a.joinedDaysAgo}d ago</p>
+                    </div>
                   </div>
-                  <span className="text-sm font-medium text-green-600 bg-green-50 px-2 py-1 rounded">
-                    {stat.change}
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Recent Jobs */}
+          <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-50">
+              <h2 className="font-bold" style={{ color: "#03045e" }}>Recent Job Listings</h2>
+              {jobs.error && <button onClick={jobs.retry} className="text-xs text-gray-400 flex items-center gap-1"><RefreshCw className="w-3 h-3" />Retry</button>}
+            </div>
+            {jobs.loading && <div className="p-4"><ListSkeleton rows={4} /></div>}
+            {jobs.error && !jobs.loading && <ErrorState title="Could not load jobs" message={jobs.error} onRetry={jobs.retry} />}
+            {!jobs.loading && jobs.data && jobs.data.length === 0 && (
+              <div className="px-6 py-8 text-center text-sm text-gray-400">No job listings yet.</div>
+            )}
+            {!jobs.loading && jobs.data && jobs.data.map((job) => (
+              <div key={job.id} className="flex items-center gap-4 px-6 py-4 border-b border-gray-50 last:border-0">
+                <div className="flex-1 min-w-0">
+                  <p className="font-semibold text-sm truncate" style={{ color: "#03045e" }}>{job.title}</p>
+                  <p className="text-xs text-gray-400">{job.company}</p>
+                </div>
+                <div className="text-right flex-shrink-0">
+                  <p className="text-xs text-gray-500">{job.applicants} applicants</p>
+                  <span className={`text-xs font-semibold ${job.status === "Active" ? "text-green-600" : job.status === "Pending" ? "text-amber-600" : "text-gray-400"}`}>
+                    {job.status}
                   </span>
                 </div>
-                <h3 className="text-gray-600 text-sm mb-1">{stat.label}</h3>
-                <p className="text-3xl font-bold text-gray-900">{stat.value}</p>
               </div>
-            );
-          })}
-        </div>
-
-        <div className="grid lg:grid-cols-2 gap-6 mb-6">
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-bold text-gray-900">Recent Alumni</h2>
-              <UserPlus className="w-5 h-5 text-gray-400" />
-            </div>
-            <div className="space-y-4">
-              {recentAlumni.map((alumni, index) => (
-                <div key={index} className="flex items-center justify-between py-3 border-b border-gray-100 last:border-0">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-[#9333EA] text-white rounded-full flex items-center justify-center font-bold">
-                      {alumni.name.split(" ").map((n) => n[0]).join("")}
-                    </div>
-                    <div>
-                      <div className="font-medium text-gray-900">{alumni.name}</div>
-                      <div className="text-sm text-gray-500">{alumni.email}</div>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <div className="text-sm text-gray-600">Class of {alumni.graduationYear}</div>
-                    <div className="text-xs text-gray-500">{alumni.joinedDays}d ago</div>
-                  </div>
-                </div>
-              ))}
-            </div>
+            ))}
           </div>
 
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-bold text-gray-900">Recent Job Postings</h2>
-              <Activity className="w-5 h-5 text-gray-400" />
+          {/* Events */}
+          <div className="bg-white rounded-xl border border-gray-100 overflow-hidden lg:col-span-2">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-50">
+              <h2 className="font-bold" style={{ color: "#03045e" }}>Upcoming Events</h2>
             </div>
-            <div className="space-y-4">
-              {recentJobs.map((job, index) => (
-                <div key={index} className="flex items-center justify-between py-3 border-b border-gray-100 last:border-0">
-                  <div>
-                    <div className="font-medium text-gray-900">{job.title}</div>
-                    <div className="text-sm text-gray-500">{job.company}</div>
-                  </div>
-                  <div className="text-right">
-                    <div className="flex items-center gap-1 text-sm text-gray-600 mb-1">
-                      <Eye className="w-4 h-4" />
-                      <span>{job.applicants} applicants</span>
-                    </div>
-                    <span
-                      className={`text-xs px-2 py-1 rounded-full ${
-                        job.status === "Active"
-                          ? "bg-green-100 text-green-700"
-                          : "bg-yellow-100 text-yellow-700"
-                      }`}
-                    >
-                      {job.status}
-                    </span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-bold text-gray-900">Upcoming Events</h2>
-            <TrendingUp className="w-5 h-5 text-gray-400" />
-          </div>
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-gray-200">
-                  <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">Event Name</th>
-                  <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">Date</th>
-                  <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">Attendees</th>
-                  <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">Revenue</th>
-                </tr>
-              </thead>
-              <tbody>
-                {upcomingEvents.map((event, index) => (
-                  <tr key={index} className="border-b border-gray-100 last:border-0 hover:bg-gray-50">
-                    <td className="py-3 px-4 text-gray-900">{event.name}</td>
-                    <td className="py-3 px-4 text-gray-600">{event.date}</td>
-                    <td className="py-3 px-4 text-gray-600">{event.attendees}</td>
-                    <td className="py-3 px-4 font-semibold text-green-600">{event.revenue}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+            {events.loading && (
+              <div className="p-4 space-y-3">
+                {[1,2,3].map((n) => <Skeleton key={n} className="h-14 w-full" />)}
+              </div>
+            )}
+            {events.error && !events.loading && <ErrorState title="Could not load events" message={events.error} onRetry={events.retry} />}
+            {!events.loading && events.data && events.data.length === 0 && (
+              <div className="px-6 py-8 text-center text-sm text-gray-400">No upcoming events.</div>
+            )}
+            {!events.loading && events.data && (
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-gray-50">
+                      {["Event", "Date", "Attendees", "Revenue"].map((h) => (
+                        <th key={h} className="text-left px-6 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">{h}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-50">
+                    {events.data.map((ev) => (
+                      <tr key={ev.id} className="hover:bg-gray-50 transition-colors">
+                        <td className="px-6 py-4 font-medium" style={{ color: "#03045e" }}>{ev.name}</td>
+                        <td className="px-6 py-4 text-gray-500">{ev.date}</td>
+                        <td className="px-6 py-4 text-gray-500">{ev.attendees.toLocaleString()}</td>
+                        <td className="px-6 py-4 font-semibold" style={{ color: "#0077b6" }}>{ev.revenue}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
         </div>
       </div>
