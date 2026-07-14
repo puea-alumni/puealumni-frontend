@@ -6,7 +6,7 @@ import {
   LayoutDashboard, Info, BookOpen, Trophy,
   Clock, FileText, PlusCircle, GraduationCap,
   Star, Building2, Tag, Home, Phone, Hammer,
-  User as UserIcon, LogOut,
+  User as UserIcon, LogOut, ShieldAlert,
 } from "lucide-react";
 import logo from "../../imports/Logo.jpeg";
 import { useAuth } from "../../context/AuthContext";
@@ -115,6 +115,9 @@ export function Navigation() {
       ? [...BASE_NAV, ADMIN_NAV_ITEM]
       : BASE_NAV;
 
+  const needsActivation =
+    isAuthenticated && user?.role !== "admin" && user?.activation?.status !== "active";
+
   const initials = user?.name
     ?.split(" ")
     .map((part) => part[0])
@@ -199,6 +202,15 @@ export function Navigation() {
 
           {/* Auth + Donate — right side */}
           <div className="hidden lg:flex items-center gap-2 flex-shrink-0">
+            {needsActivation && (
+              <Link
+                to="/activate"
+                className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-[13px] font-semibold text-white"
+                style={{ backgroundColor: "#dc2626" }}
+              >
+                <ShieldAlert className="w-3.5 h-3.5" /> Activate Now
+              </Link>
+            )}
             <Link
               to="/donate"
               className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-[13px] font-semibold text-white"
@@ -241,6 +253,15 @@ export function Navigation() {
                     >
                       <UserIcon className="w-4 h-4" /> Profile
                     </Link>
+                    {needsActivation && (
+                      <Link
+                        to="/activate"
+                        onClick={() => setProfileOpen(false)}
+                        className="flex items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50 font-semibold"
+                      >
+                        <ShieldAlert className="w-4 h-4" /> Activate Membership
+                      </Link>
+                    )}
                     <button
                       onClick={handleLogout}
                       className="w-full flex items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50"
@@ -340,6 +361,16 @@ export function Navigation() {
             })}
 
             <div className="pt-3 border-t space-y-1.5" style={{ borderColor: "#0077b6" }}>
+              {needsActivation && (
+                <Link
+                  to="/activate"
+                  onClick={() => setMobileOpen(false)}
+                  className="flex items-center gap-2 px-3 py-2.5 rounded-lg text-sm font-semibold text-white"
+                  style={{ backgroundColor: "#dc2626" }}
+                >
+                  <ShieldAlert className="w-4 h-4" /> Activate Membership
+                </Link>
+              )}
               <Link
                 to="/donate"
                 onClick={() => setMobileOpen(false)}

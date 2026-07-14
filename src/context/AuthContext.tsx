@@ -1,8 +1,14 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import api from "../lib/api";
 
+interface Activation {
+  status: string;
+  expires_at: string | null;
+  days_remaining: number;
+}
+
 interface User {
-  id: number;
+  id: string;
   name: string;
   email: string;
   graduation_year?: number;
@@ -11,6 +17,8 @@ interface User {
   company?: string | null;
   city?: string | null;
   bio?: string | null;
+  alumni_number?: string;
+  activation?: Activation;
   [key: string]: any;
 }
 
@@ -22,6 +30,7 @@ interface AuthContextType {
   login: (user: User, token: string) => void;
   logout: () => void;
   updateUser: (user: User) => void;
+  refreshUser: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -76,9 +85,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(updatedUser);
   };
 
+  const refreshUser = async () => {
+    try {
+      const response = await api.get("/auth/me");
+      const freshUser = response.data.data;
+      localStorage.setItem("user", JSON.stringify(freshUser));
+      setUser(freshUser);
+    } catch (err) {
+      console.error("Failed to refresh user:", err);
+    }
+  };
+
   return (
     <AuthContext.Provider
-      value={{ user, token, isAuthenticated: !!token, isLoading, login, logout, updateUser }}
+      value={{ user, token, isAuthenticated: !!token, isLoading, login, logout, updateUser, refreshUser }}
     >
       {children}
     </AuthContext.Provider>

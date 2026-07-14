@@ -12,9 +12,14 @@ import { EventsPage } from "./components/EventsPage";
 import { SpotlightPage } from "./components/SpotlightPage";
 import { NewsPage } from "./components/NewsPage";
 import { MarketPage } from "./components/MarketPage";
+import { AdminLayout } from "./components/AdminLayout";
 import { AdminDashboard } from "./components/AdminDashboard";
+import { AdminUsersPage } from "./components/AdminUsersPage";
 import { DonationsPage } from "./components/DonationsPage";
 import { ProfilePage } from "./components/ProfilePage";
+import { ActivatePage } from "./components/ActivatePage";
+// import { ForgotPasswordPage } from "./components/ForgotPasswordPage";
+// import { ResetPasswordPage } from "./components/ResetPasswordPage";
 import { ContactPage } from "./components/ContactPage";
 import { ProjectsPage } from "./components/ProjectsPage";
 import { NotFound } from "./components/NotFound";
@@ -29,6 +34,8 @@ export const router = createBrowserRouter([
       { path: "about", Component: AboutUsPage },
       { path: "login", Component: LoginPage },
       { path: "register", Component: RegisterPage },
+      // { path: "forgot-password", Component: ForgotPasswordPage },
+      // { path: "reset-password", Component: ResetPasswordPage },
       // Alumni
       { path: "alumni", Component: AlumniListPage },
       { path: "alumni/:id", Component: AlumniProfilePage },
@@ -45,13 +52,18 @@ export const router = createBrowserRouter([
       { path: "market", Component: MarketPage },
       // Donations
       { path: "donate", Component: DonationsPage },
+      // Admin — protected once at the layout level, pages nest underneath
       {
         path: "admin",
         element: (
           <ProtectedRoute requiredRole="admin">
-            <AdminDashboard />
+            <AdminLayout />
           </ProtectedRoute>
         ),
+        children: [
+          { index: true, Component: AdminDashboard },
+          { path: "users", Component: AdminUsersPage },
+        ],
       },
       {
         path: "profile",
@@ -61,11 +73,17 @@ export const router = createBrowserRouter([
           </ProtectedRoute>
         ),
       },
+      {
+        path: "activate",
+        element: (
+          <ProtectedRoute>
+            <ActivatePage />
+          </ProtectedRoute>
+        ),
+      },
       // Contact
       { path: "contact", Component: ContactPage },
       { path: "projects", Component: ProjectsPage },
-      // Admin
-      { path: "admin", Component: AdminDashboard },
       { path: "*", Component: NotFound },
     ],
   },
